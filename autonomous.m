@@ -12,8 +12,8 @@
 function Autonomous(serPort)
 
 [hsv_color, hsv_img] = InitColorTracker();
-[largest_blob, max_area] = calculateBlob( hsv_color, hsv_img )
-[centerPositionX, centerPositionY] = calculateCentroid( largest_blob, max_area )
+[largest_blob, max_area] = calculateBlob( hsv_color, hsv_img );
+[centerPositionX, centerPositionY] = calculateCentroid( largest_blob, max_area );
 old_max_area = max_area
 old_centerPositionX = centerPositionX
 delta_area = 0
@@ -26,7 +26,7 @@ current_angle = 0;
 currentState = 0;
 % parameter for the velocity of the roomba
 max_v = 0.3 % max possible is 0.5, however it seems to introduce too much error
-SetFwdVelAngVelCreate(serPort,max_v,0);
+SetFwdVelAngVelCreate(serPort,0,0);
 
 % bump_pos_x = 0
 % bump_pos_y = 0
@@ -53,8 +53,8 @@ while true
     delta_area = max_area-old_max_area
     delta_x = centerPositionX-old_centerPositionX
 
-    alpha=0.1
-    eta = 0.1
+    alpha=0 %0.00002
+    eta = 0.002
     SetFwdVelAngVelCreate(serPort,-delta_area*alpha,-delta_x*eta);
     
     % if (delta_x > 0)
@@ -73,14 +73,14 @@ while true
         otherwise
     end
     
-    pause(0.3)
+    pause(0.1)
 
-    old_max_area = max_area
-    old_centerPositionX = centerPositionX
+    old_max_area = max_area;
+    old_centerPositionX = centerPositionX;
     img = imread('http://192.168.0.102/img/snapshot.cgi?');
     hsv_img=rgb2hsv(img);
-    [largest_blob, max_area] = calculateBlob( hsv_color, hsv_img )
-    [centerPositionX, centerPositionY] = calculateCentroid( largest_blob, max_area )
+    [largest_blob, max_area] = calculateBlob( hsv_color, hsv_img );
+    [centerPositionX, centerPositionY] = calculateCentroid( largest_blob, max_area );
 
 end
 end
