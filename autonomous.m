@@ -9,6 +9,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% resolution used: 160 X 120, framerate: 30/s
 function Autonomous(serPort)
 
 [hsv_color, hsv_img] = InitColorTracker();
@@ -35,15 +36,6 @@ SetFwdVelAngVelCreate(serPort,0,0);
 
 % Enter main loop
 while true
-    % Poll sensors
-    [BumpRight, BumpLeft, WheDropRight, WheDropLeft, WheDropCaster, ...
-        BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
-
-    
-    bumped= BumpRight || BumpFront;
-    
-    Wall = WallSensorReadRoomba(serPort);
-    
     % Update current position
     distance = DistanceSensorRoomba(serPort);
     current_pos_x = current_pos_x+distance*cos(current_angle)
@@ -53,9 +45,15 @@ while true
     delta_area = max_area-old_max_area
     delta_x = centerPositionX-old_centerPositionX
 
-    alpha=0 %0.00002
-    eta = 0.002
-    SetFwdVelAngVelCreate(serPort,-delta_area*alpha,-delta_x*eta);
+    alpha=0.00008;
+    eta = 0.005; %0.002
+    v = -delta_area*alpha
+    w = -delta_x*eta
+    t = 0.05
+    if abs(v) < t
+        v = 0
+    end
+    SetFwdVelAngVelCreate(serPort,v,w);
     
     % if (delta_x > 0)
     %     % turn right
@@ -75,8 +73,8 @@ while true
     
     pause(0.1)
 
-    old_max_area = max_area;
-    old_centerPositionX = centerPositionX;
+    %old_max_area = max_area;
+    %old_centerPositionX = centerPositionX;
     img = imread('http://192.168.0.102/img/snapshot.cgi?');
     hsv_img=rgb2hsv(img);
     [largest_blob, max_area] = calculateBlob( hsv_color, hsv_img );
