@@ -18,16 +18,32 @@ function Autonomous2(serPort)
  hsv_color = [0.6604 0.3397 0.6118];
  [largest_blob, max_area] = calculateBlob2( hsv_color, hsv_img )
  [centerPositionX, centerPositionY] = calculateCentroid( largest_blob, max_area )
- old_max_area = max_area
- old_centerPositionX = centerPositionX
- delta_area = 0
- delta_x = 0
+ old_max_area = max_area;
+ old_centerPositionX = centerPositionX;
+ delta_area = 0;
+ delta_x = 0;
 
  % The state of the robot
  current_pos_x = 0;
  current_pos_y = 0;
  current_angle = 0;
  % parameter for the velocity of the roomba
+
+%Define Robot States
+LOOKING_FOR_DOOR = 0;
+CENTERING_CENTROID = 1;
+GO_STRAIGHT = 2;
+KNOCKING = 3;
+
+knocking_state = 0;
+GO_BACK = 0;
+GO_KNOCK = 1;
+
+bump_pos_x = 0;
+bump_pos_y = 0;
+% no_bumps_so_far = true
+% away_bump = false
+
 
 if max_area > 0
  currentState = CENTERING_CENTROID;
@@ -36,42 +52,29 @@ else
  currentState = LOOKING_FOR_DOOR;
 end
 
-%Define Robot States
-LOOKING_FOR_DOOR = 0
-CENTERING_CENTROID = 1
-GO_STRAIGHT = 2
-KNOCKING = 3
 
-knocking_state = 0
-GO_BACK = 0
-GO_KNOCK = 1
-
-bump_pos_x = 0
-bump_pos_y = 0
-% no_bumps_so_far = true
-% away_bump = false
 
 % Enter main loop
 while true
     % Poll sensors
     [BumpRight, BumpLeft, WheDropRight, WheDropLeft, WheDropCaster, ...
         BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
-
+    bumped=0;   
     bumped = BumpRight || BumpFront;
     
     % Wall = WallSensorReadRoomba(serPort);
     
     % Update current position
     distance = DistanceSensorRoomba(serPort);
-    current_pos_x = current_pos_x+distance*cos(current_angle)
-    current_pos_y = current_pos_y+distance*sin(current_angle)
-    current_angle = current_angle+AngleSensorRoomba(serPort)
+    current_pos_x = current_pos_x+distance*cos(current_angle);
+    current_pos_y = current_pos_y+distance*sin(current_angle);
+    current_angle = current_angle+AngleSensorRoomba(serPort);
 
     % delta_area = max_area-old_max_area
     % delta_x = centerPositionX-old_centerPositionX
 
     % alpha=0.00008;
-    % eta = 0.005;
+     eta = 0.005;
     % SetFwdVelAngVelCreate(serPort,-delta_area*alpha,-delta_x*eta);
     
     % if (delta_x > 0)
@@ -84,7 +87,7 @@ while true
     % else
     %     % go forward
     % end
-
+    currentState
     switch(currentState)
        case LOOKING_FOR_DOOR
             SetFwdVelAngVelCreate(serPort,0,10*pi/180);
@@ -92,7 +95,7 @@ while true
              currentState = CENTERING_CENTROID;
             end    
         case CENTERING_CENTROID
-            centering_trheshold =10
+            centering_trheshold = 100
             delta_x = centerPositionX-width/2
             if abs(delta_x) < centering_trheshold 
                 currentState = GO_STRAIGHT;
