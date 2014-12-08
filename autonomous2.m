@@ -17,7 +17,7 @@ function Autonomous2(serPort)
  hsv_img=rgb2hsv(img);
  hsv_color = [0.6604 0.3397 0.6118];
  [largest_blob, max_area] = calculateBlob2( hsv_color, hsv_img )
- [centerPositionX, centerPositionY] = calculateCentroid( largest_blob, max_area )
+ [centerPositionX, centerPositionY] = calculateCentroid( largest_blob, max_area );
  old_max_area = max_area;
  old_centerPositionX = centerPositionX;
  delta_area = 0;
@@ -29,6 +29,8 @@ function Autonomous2(serPort)
  current_angle = 0;
  % parameter for the velocity of the roomba
 
+largest_door_area = 0
+angle_largest_door = 0
 %Define Robot States
 LOOKING_FOR_DOOR = 0;
 CENTERING_CENTROID = 1;
@@ -44,13 +46,17 @@ bump_pos_y = 0;
 % no_bumps_so_far = true
 % away_bump = false
 
+% degrees per
+spin_vel = 10*pi/180
+currentState = LOOKING_FOR_DOOR;
+SetFwdVelAngVelCreate(serPort,0, spin_vel);
 
-if max_area > 0
- currentState = CENTERING_CENTROID;
-else    
- SetFwdVelAngVelCreate(serPort,0,10*pi/180);
- currentState = LOOKING_FOR_DOOR;
-end
+% if max_area > 0
+%  currentState = CENTERING_CENTROID;
+% else    
+%  SetFwdVelAngVelCreate(serPort,0, spin_vel);
+%  currentState = LOOKING_FOR_DOOR;
+% end
 
 
 
@@ -74,7 +80,7 @@ while true
     % delta_x = centerPositionX-old_centerPositionX
 
     % alpha=0.00008;
-     eta = 0.005;
+     eta = 0.0005;
     % SetFwdVelAngVelCreate(serPort,-delta_area*alpha,-delta_x*eta);
     
     % if (delta_x > 0)
@@ -87,15 +93,18 @@ while true
     % else
     %     % go forward
     % end
-    currentState
     switch(currentState)
        case LOOKING_FOR_DOOR
-            SetFwdVelAngVelCreate(serPort,0,10*pi/180);
-            if max_area > 0
-             currentState = CENTERING_CENTROID;
+            if (max_area > largest_door_area)
+                largest_door_area = max_area
+                angle_largest_door = current_angle
+            end
+            if current_angle > 2*pi
+                turnAngle(serPort, 0.05, angle_largest_door*180/pi);
+                currentState = CENTERING_CENTROID;
             end    
         case CENTERING_CENTROID
-            centering_trheshold = 100
+            centering_trheshold = 50;
             delta_x = centerPositionX-width/2
             if abs(delta_x) < centering_trheshold 
                 currentState = GO_STRAIGHT;
@@ -109,22 +118,24 @@ while true
                 knocking_state = GO_BACK;
                 bump_pos_x = current_pos_x; 
                 bump_pos_y = current_pos_y;
-                SetFwdVelAngVelCreate(serPort,-0.1,0);
+                SetFwdVelAngVelCreate(serPort,-0.15,0);
             end
         case KNOCKING
             distance_bump = sqrt((bump_pos_x- current_pos_x)^2+(bump_pos_y- current_pos_y)^2);
             switch(knocking_state)
                 case GO_BACK
-                    SetFwdVelAngVelCreate(serPort,-0.1,0);
-                    if distance_bump > 0.2
-                        SetFwdVelAngVelCreate(serPort,0.1,0);
+                    SetFwdVelAngVelCreate(serPort,-0.15,0);
+                    if distance_bump > 0.1
+                        SetFwdVelAngVelCreate(serPort,0.15,0);
                         knocking_state = GO_KNOCK;
                     end
                 case GO_KNOCK
-                    SetFwdVelAngVelCreate(serPort,0.1,0);
+                    SetFwdVelAngVelCreate(serPort,0.15,0);
                     if bumped
                         %make noise
                         %call it a day
+                        fwrite(serPort, [140 3 7 48 40 48 40 55 40 55 40 57 40 57 40 55 80]);
+                        fwrite(serPort, [141 3])
                         SetFwdVelAngVelCreate(serPort,0,0);
                         break;
                     end   
@@ -136,8 +147,8 @@ while true
 
     img = imread('http://192.168.0.102/img/snapshot.cgi?');
     hsv_img=rgb2hsv(img);
-    [largest_blob, max_area] = calculateBlob2( hsv_color, hsv_img )
-    [centerPositionX, centerPositionY] = calculateCentroid( largest_blob, max_area )
+    [largest_blob, max_area] = calculateBlob2( hsv_color, hsv_img );
+    [centerPositionX, centerPositionY] = calculateCentroid( largest_blob, max_area );
 
 end
 end

@@ -18,12 +18,12 @@ function [largest_blob, max_area] = calculateBlob2( hsv_color, hsv_img )
  hsv_mask = hsv_mask & hsv_img(:,:,2) >= hsv_color(2)-hsv_mask_range & hsv_img(:,:,2) < hsv_color(2)+hsv_mask_range; %& img(:,:,2) > color(2)-mask_range & img(:,:,2) < color(2)+mask_range & img(:,:,3) > color(3)-mask_range & img(:,:,3) < color(3)+mask_range 
  %hsv_mask_range=0.1;
  %hsv_mask = hsv_mask & hsv_img(:,:,3) >= hsv_color(3)-hsv_mask_range & hsv_img(:,:,3) < hsv_color(3)+hsv_mask_range; 
- figure();
- imshow(hsv_mask);
- hsv_mask= bwmorph(hsv_mask, 'erode',3)
+ % figure();
+ %imshow(hsv_mask);
+ %hsv_mask= bwmorph(hsv_mask, 'erode',3)
  
- figure();
- imshow(hsv_mask);
+ % figure();
+ % imshow(hsv_mask);
  
  labeled_img = bwlabel(hsv_mask);
  num = max(unique(labeled_img));
@@ -41,7 +41,7 @@ function [largest_blob, max_area] = calculateBlob2( hsv_color, hsv_img )
  end
  
  if(max_area >0)
-    largest_blob= bwmorph(largest_blob, 'dilate',3)
+    largest_blob= bwmorph(largest_blob, 'dilate',3);
  else
      largest_blob =0;
  end
