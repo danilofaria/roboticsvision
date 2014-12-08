@@ -66,7 +66,7 @@ while true
     [BumpRight, BumpLeft, WheDropRight, WheDropLeft, WheDropCaster, ...
         BumpFront] = BumpsWheelDropsSensorsRoomba(serPort);
     bumped=0;   
-    bumped = BumpRight || BumpFront;
+    bumped = BumpRight || BumpFront || BumpLeft;
     
     % Wall = WallSensorReadRoomba(serPort);
     
@@ -112,7 +112,8 @@ while true
                 SetFwdVelAngVelCreate(serPort,0,-delta_x*eta);
             end
         case GO_STRAIGHT
-            SetFwdVelAngVelCreate(serPort,0.1,0);
+            delta_x = centerPositionX-width/2
+            SetFwdVelAngVelCreate(serPort,0.1,-delta_x*eta);
             if bumped
                 currentState = KNOCKING;
                 knocking_state = GO_BACK;
@@ -130,7 +131,7 @@ while true
                         knocking_state = GO_KNOCK;
                     end
                 case GO_KNOCK
-                    SetFwdVelAngVelCreate(serPort,0.15,0);
+                    SetFwdVelAngVelCreate(serPort,0.3,0);
                     if bumped
                         %make noise
                         %call it a day
