@@ -1,4 +1,4 @@
-function [largest_blob, max_area] = calculateBlob( hsv_color, hsv_img )
+function [largest_blob, max_area] = calculateBlob2( hsv_color, hsv_img )
  hsv_mask_range=0.1;
  
  lower_hue = hsv_color(1)-hsv_mask_range;
